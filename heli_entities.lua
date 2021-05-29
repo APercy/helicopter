@@ -2,6 +2,24 @@
 -- entity
 --
 
+-- supported colors
+local color_def = {
+	["#2b2b2b"] = "Black",
+	["#ffffff"] = "White",
+	["#9f9f9f"] = "Grey",
+	["#6d6d6d"] = "Dark Grey",
+	["#dc1818"] = "Red",
+	["#07b6bc"] = "Cyan",
+	["#8c5922"] = "Brown",
+	["#4ee34c"] = "Green",
+	["#567a42"] = "Dark Green",
+	["#ff62c6"] = "Pink",
+	["#ff8b0e"] = "Orange",
+	["#a437ff"] = "Violet",
+	["#ffe400"] = "Yellow",
+	["#ff0098"] = "Magenta",
+}
+
 minetest.register_entity('helicopter:seat_base',{
 initial_properties = {
 	physical = false,
@@ -11,17 +29,17 @@ initial_properties = {
 	mesh = "seat_base.b3d",
     textures = {"helicopter_black.png",},
 	},
-	
+
     on_activate = function(self,std)
 	    self.sdata = minetest.deserialize(std) or {}
 	    if self.sdata.remove then self.object:remove() end
     end,
-	    
+
     get_staticdata=function(self)
       self.sdata.remove=true
       return minetest.serialize(self.sdata)
     end,
-	
+
 })
 
 minetest.register_entity("helicopter:heli", {
@@ -50,7 +68,7 @@ minetest.register_entity("helicopter:heli", {
     hp_max = 50,
     color = "#0063b0",
     _passenger = nil,
-    _by_mouse = false,
+    _by_mouse = helicopter.turn_player_look,
 
     get_staticdata = function(self) -- unloaded/unloads ... is now saved
         return minetest.serialize({
@@ -145,7 +163,7 @@ minetest.register_entity("helicopter:heli", {
         local is_attached = false
         if self.owner then
             local player = minetest.get_player_by_name(self.owner)
-            
+
             if player then
                 local player_attach = player:get_attach()
                 if player_attach then
@@ -170,7 +188,7 @@ minetest.register_entity("helicopter:heli", {
                     pitch = 1.0,
                 })
                 --[[if self.damage > 100 then --if acumulated damage is greater than 100, adieu
-                    helicopter.destroy(self, player)   
+                    helicopter.destroy(self, player)
                 end]]--
             end
 
@@ -219,14 +237,14 @@ minetest.register_entity("helicopter:heli", {
         if self.owner == nil then
             self.owner = name
         end
-        	
+
         if self.driver_name and self.driver_name ~= name then
 			-- do not allow other players to remove the object while there is a driver
 			return
 		end
 
         local touching_ground, liquid_below = helicopter.check_node_below(self.object)
-        
+
         --XXXXXXXX
         local is_attached = false
         if puncher:get_attach() == self.pilot_seat_base then is_attached = true end
@@ -273,11 +291,42 @@ minetest.register_entity("helicopter:heli", {
             end
 
             if self.hp_max <= 0 then
-                helicopter.destroy(self, puncher)
+                if helicopter.punch_inv then
+                    local pinv = puncher:get_inventory()
+                    local stack = ItemStack("helicopter:heli")
+                    local imeta = stack:get_meta()
+
+                    -- store fuel level & color
+                    imeta:set_float("fuel", self.energy)
+                    if self.color and self.color ~= "#0063b0" then -- don't store defult "blue"
+                        imeta:set_string("color", self.color)
+                    end
+
+                    local color_name = color_def[self.color:lower()]
+                    if color_name then
+                        imeta:set_string("description", color_name .. " Helicopter")
+                    end
+
+                    if not pinv:room_for_item("main", stack) then
+                        minetest.chat_send_player(puncher:get_player_name(),
+                            "You do not have room in your inventory")
+                    else
+                        if self.pointer then self.pointer:remove() end
+                        if self.pilot_seat_base then self.pilot_seat_base:remove() end
+                        if self.passenger_seat_base then self.passenger_seat_base:remove() end
+
+                        self.object:remove()
+                        if not helicopter.creative or not pinv:contains_item("main", stack, true) then
+                            pinv:add_item("main", stack)
+                        end
+                    end
+                else
+                    helicopter.destroy(self, puncher)
+                end
             end
 
         end
-        
+
 	end,
 
 	on_rightclick = function(self, clicker)

@@ -29,6 +29,7 @@ helicopter.colors ={
     yellow='#ffe400',
 }
 
+dofile(minetest.get_modpath("helicopter") .. DIR_DELIM .. "settings.lua")
 --dofile(minetest.get_modpath(minetest.get_current_modname()) .. DIR_DELIM .. "heli_hud.lua")
 dofile(minetest.get_modpath("helicopter") .. DIR_DELIM .. "heli_hud.lua")
 dofile(minetest.get_modpath("helicopter") .. DIR_DELIM .. "heli_utilities.lua")
@@ -48,7 +49,7 @@ if not minetest.global_exists("matrix3") then
 	dofile(minetest.get_modpath("helicopter") .. DIR_DELIM .. "matrix.lua")
 end
 
-local creative_exists = minetest.global_exists("creative")
+helicopter.creative = minetest.global_exists("creative")
 
 function helicopter.check_is_under_water(obj)
 	local pos_up = obj:get_pos()

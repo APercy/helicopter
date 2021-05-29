@@ -24,21 +24,27 @@ minetest.register_craftitem("helicopter:heli", {
 		if minetest.get_node(pointed_thing.above).name ~= "air" then
 			return
 		end
-       
-        local obj = minetest.add_entity(pointed_thing.above, "helicopter:heli")
-        local ent = obj:get_luaentity()
-        --local imeta = itemstack:get_meta()
-        local owner = placer:get_player_name()
-        ent.owner = owner
-        --[[
-        ent.energy = imeta:get_int("energy")
-        ent.hp = imeta:get_int("hp")]]--
 
-        local properties = ent.object:get_properties()
-        properties.infotext = owner .. " nice helicopter"
-        ent.object:set_properties(properties)
+		local imeta = itemstack:get_meta()
+		local color = imeta:get_string("color")
+		if color == "" then color = nil end
+		local fuel = math.floor(imeta:get_float("fuel") * 100) / 100
 
-		if not (creative_exists and placer and
+		local obj = minetest.add_entity(pointed_thing.above, "helicopter:heli")
+		local ent = obj:get_luaentity()
+		local owner = placer:get_player_name()
+		ent.owner = owner
+		ent.energy = fuel
+		helicopter.updateIndicator(ent)
+		if color then
+			helicopter.paint(ent, color)
+		end
+
+		local properties = ent.object:get_properties()
+		properties.infotext = owner .. " nice helicopter"
+		ent.object:set_properties(properties)
+
+		if not (helicopter.creative and placer and
 				creative.is_enabled_for(placer:get_player_name())) then
 			itemstack:take_item()
 		end

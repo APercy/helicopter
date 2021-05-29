@@ -1,4 +1,4 @@
-helicopter.gravity = tonumber(minetest.settings:get("movement_gravity")) or 9.8
+
 helicopter.vector_up = vector.new(0, 1, 0)
 
 function helicopter.get_hipotenuse_value(point1, point2)
