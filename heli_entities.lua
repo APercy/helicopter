@@ -235,9 +235,13 @@ minetest.register_entity("nss_helicopter:heli", {
 			return
 		end
 		local name = puncher:get_player_name()
+
         if self.owner and self.owner ~= name and self.owner ~= "" then
-            if not minetest.check_player_privs(puncher, {protection_bypass=true}) then return end
+            local is_admin = minetest.check_player_privs(puncher, {protection_bypass=true})
+            local is_area_owner = helicopter.isAreaProtectedBy(self, puncher)
+            if not is_admin and not is_area_owner then return end
         end
+
         if self.owner == nil then
             self.owner = name
         end
