@@ -1,6 +1,8 @@
 
 helicopter.vector_up = vector.new(0, 1, 0)
 
+helicopter.mount_attached = {}
+
 function helicopter.get_hipotenuse_value(point1, point2)
     return math.sqrt((point1.x - point2.x) ^ 2 + (point1.y - point2.y) ^ 2 + (point1.z - point2.z) ^ 2)
 end
@@ -48,6 +50,7 @@ function helicopter.attach(self, player)
     -- attach the driver
     player:set_attach(self.pilot_seat_base, "", {x = 0, y = 0, z = 0}, {x = 0, y = 0, z = 0})
     player:set_eye_offset({x = 0, y = -4, z = 1}, {x = 0, y = 8, z = -30})
+    helicopter.mount_attached[name] = self
     player_api.player_attached[name] = true
     -- make the driver sit
     minetest.after(0.2, function()
@@ -80,6 +83,7 @@ function helicopter.dettach(self, player)
     -- detach the player
     player:set_detach()
     player_api.player_attached[name] = nil
+    helicopter.mount_attached[name] = nil
     player:set_eye_offset({x=0,y=0,z=0},{x=0,y=0,z=0})
     player_api.set_animation(player, "stand")
     self.object:set_acceleration(vector.multiply(helicopter.vector_up, -helicopter.gravity))
@@ -95,6 +99,7 @@ function helicopter.attach_pax(self, player)
     -- attach the passenger
     player:set_attach(self.passenger_seat_base, "", {x = 0, y = 0, z = 0}, {x = 0, y = 0, z = 0})
     player:set_eye_offset({x = 0, y = -4, z = 1}, {x = 0, y = 8, z = -5})
+    helicopter.mount_attached[name] = self
     player_api.player_attached[name] = true
     -- make the driver sit
     minetest.after(0.2, function()
@@ -115,6 +120,7 @@ function helicopter.dettach_pax(self, player)
     -- detach the player
     player:set_detach()
     player_api.player_attached[name] = nil
+    helicopter.mount_attached[name] = nil
     player:set_eye_offset({x=0,y=0,z=0},{x=0,y=0,z=0})
     player_api.set_animation(player, "stand")
 end
@@ -131,6 +137,7 @@ function helicopter.destroy(self, puncher)
         puncher:set_detach()
         puncher:set_eye_offset({x = 0, y = 0, z = 0}, {x = 0, y = 0, z = 0})
         player_api.player_attached[name] = nil
+        helicopter.mount_attached[name] = nil
         -- player should stand again
         player_api.set_animation(puncher, "stand")
         self.driver_name = nil
@@ -160,3 +167,36 @@ function helicopter.destroy(self, puncher)
     minetest.add_item({x=pos.x+math.random()-0.5,y=pos.y,z=pos.z+math.random()-0.5},'default:copperblock')
     minetest.add_item({x=pos.x+math.random()-0.5,y=pos.y,z=pos.z+math.random()-0.5},'nss_helicopter:blades')
 end
+
+function helicopter.force_detach(player)
+    local player_name = player:get_player_name()
+    if not player_name then return end
+    local entity = helicopter.mount_attached[player_name]
+    if entity then
+        if entity.driver_name == player_name then
+            helicopter.dettach(entity, player)
+        elseif entity._passenger == player_name then
+            helicopter.dettach_pax(entity, player)
+        end
+        -- helicopter.destroy(entity, player)
+    end
+end
+
+-- handle player death
+minetest.register_on_dieplayer(function(player)
+    helicopter.force_detach(player)
+    return true
+end)
+
+--[[
+minetest.register_on_leaveplayer(function(player)
+	helicopter.force_detach(player)
+end)
+
+minetest.register_on_shutdown(function()
+	local players = minetest.get_connected_players()
+	for i = 1, #players do
+		helicopter.force_detach(players[i])
+	end
+end)
+]]--
