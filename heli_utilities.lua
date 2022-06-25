@@ -129,13 +129,13 @@ function helicopter.destroy(self, puncher)
     end
 
     if self.driver_name then
-        -- detach the driver first (puncher must be driver)
-        puncher:set_detach()
-        puncher:set_eye_offset({x = 0, y = 0, z = 0}, {x = 0, y = 0, z = 0})
-        player_api.player_attached[name] = nil
-        -- player should stand again
-        player_api.set_animation(puncher, "stand")
-        self.driver_name = nil
+        local driver = minetest.get_player_by_name(self.driver_name)
+        helicopter.dettach(self, driver)
+    end
+
+    if self._passenger then
+        local passenger = minetest.get_player_by_name(self._passenger)
+        helicopter.dettach_pax(self, passenger)
     end
 
     local pos = self.object:get_pos()
