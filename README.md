@@ -18,8 +18,8 @@ re-reworked by A_Percy
 
 License of source code:
 -----------------------
-original code by Pavel_S: GPL_v2 (see file LICENSE) 
-changes / complete rework by DS and A_Percy
+original code by Pavel_S: GPL_v2 or any later version (see file LICENSE)</br>
+changes / complete rework by DS and A_Percy</br>
 `matrix.lua` file: CC0 
 
 License of media (textures and sounds):
