@@ -160,13 +160,13 @@ function helicopter.destroy(self, puncher)
     end
 
     if self.driver_name then
-        -- detach the driver first (puncher must be driver)
-        puncher:set_detach()
-        puncher:set_eye_offset({x = 0, y = 0, z = 0}, {x = 0, y = 0, z = 0})
-        player_api.player_attached[name] = nil
-        -- player should stand again
-        player_api.set_animation(puncher, "stand")
-        self.driver_name = nil
+        local driver = minetest.get_player_by_name(self.driver_name)
+        helicopter.dettach(self, driver)
+    end
+
+    if self._passenger then
+        local passenger = minetest.get_player_by_name(self._passenger)
+        helicopter.dettach_pax(self, passenger)
     end
 
     local pos = self.object:get_pos()
@@ -192,4 +192,36 @@ function helicopter.destroy(self, puncher)
     minetest.add_item({x=pos.x+math.random()-0.5,y=pos.y,z=pos.z+math.random()-0.5},'default:steelblock')
     minetest.add_item({x=pos.x+math.random()-0.5,y=pos.y,z=pos.z+math.random()-0.5},'default:copperblock')
     minetest.add_item({x=pos.x+math.random()-0.5,y=pos.y,z=pos.z+math.random()-0.5},'nss_helicopter:blades')
+end
+
+function helicopter.isAreaProtectedBy(self, player)
+    local name = player:get_player_name()
+    local pos = self.object:get_pos()
+
+    if minetest.get_modpath("areas") then
+        local area_owners = areas:getNodeOwners(pos)
+        for _, value in pairs(area_owners) do
+            if value == name then
+                return true
+            end
+        end
+    end
+
+    if minetest.get_modpath("protector") then
+        -- use improvised find_nodes check
+        local protector_radius = tonumber(minetest.settings:get("protector_radius")) or 5
+        -- find the protector nodes
+        local protector_pos = minetest.find_nodes_in_area(
+            {x = pos.x - r, y = pos.y - r, z = pos.z - r},
+            {x = pos.x + r, y = pos.y + r, z = pos.z + r},
+            {"protector:protect", "protector:protect2", "protector:protect_hidden"})
+        for n = 1, #protector_pos do
+            local meta = minetest.get_meta(protector_pos[n])
+            local owner = meta:get_string("owner") or ""
+            if owner == name then
+                return true
+            end
+        end
+    end
+    return false
 end

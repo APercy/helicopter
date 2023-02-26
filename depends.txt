@@ -2,3 +2,5 @@ player_api
 biofuel
 default?
 creative?
+areas?
+protector?

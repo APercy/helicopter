@@ -235,15 +235,16 @@ minetest.register_entity("nss_helicopter:heli", {
 			return
 		end
 		local name = puncher:get_player_name()
-        if self.owner and self.owner ~= name and self.owner ~= "" then return end
+
+        if self.owner and self.owner ~= name and self.owner ~= "" then
+            local is_admin = minetest.check_player_privs(puncher, {protection_bypass=true})
+            local is_area_owner = helicopter.isAreaProtectedBy(self, puncher)
+            if not is_admin and not is_area_owner then return end
+        end
+
         if self.owner == nil then
             self.owner = name
         end
-
-        if self.driver_name and self.driver_name ~= name then
-			-- do not allow other players to remove the object while there is a driver
-			return
-		end
 
         local touching_ground, liquid_below = helicopter.check_node_below(self.object)
 
