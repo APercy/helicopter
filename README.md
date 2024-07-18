@@ -18,8 +18,8 @@ re-reworked by A_Percy
 
 License of source code:
 -----------------------
-original code by Pavel_S: GPL_v2 (see file LICENSE) 
-changes / complete rework by DS and A_Percy
+original code by Pavel_S: GPL_v2 or any later version (see file LICENSE)</br>
+changes / complete rework by DS and A_Percy</br>
 `matrix.lua` file: CC0 
 
 License of media (textures and sounds):
@@ -33,4 +33,4 @@ helicopter model and texture:
 
 Helicube is a model made by Alexsandro Percy, based in original model aesthetic but made from zero. But using on rotors an adaptation of the texture from 3D model made by Melkor and his animations. 
 
-the item textures are probably by Pavel_S 
+Item textures by Pavel_S | License: CC BY-SA
